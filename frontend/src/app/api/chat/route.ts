@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         "X-Title": "Five Spirits",
       },
       body: JSON.stringify({
-        model: "google/gemma-4-31b-it:free",
+        model: "nvidia/nemotron-3-super-120b-a12b:free",
         stream: false,
         max_tokens: 1024,
         messages: [

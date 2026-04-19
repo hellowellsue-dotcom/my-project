@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await client.chat.completions.create({
-      model: "google/gemma-4-31b-it:free",
+      model: "nvidia/nemotron-3-super-120b-a12b:free",
       stream: false,
       max_tokens: 5,
       messages: [
