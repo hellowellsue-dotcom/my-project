@@ -19,10 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
+    <html lang="ko" className="dark">
       <head>
-        {/* 다크모드 플래시 방지 — 하이드레이션 전 클래스 적용 */}
-        <script dangerouslySetInnerHTML={{ __html: `try{const m=localStorage.getItem('app_mode');if(m!=="light")document.documentElement.classList.add("dark")}catch(e){document.documentElement.classList.add("dark")}` }} />
+        {/* 라이트모드 저장된 경우에만 dark 클래스 제거 */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('app_mode')==="light")document.documentElement.classList.remove("dark")}catch(e){}` }} />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
