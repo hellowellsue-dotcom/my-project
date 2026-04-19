@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await client.chat.completions.create({
-      model: "google/gemini-2.5-flash:free",
+      model: "google/gemini-2.0-flash-exp:free",
       stream: false,
       max_tokens: 5,
       messages: [
