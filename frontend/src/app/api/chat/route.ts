@@ -3,9 +3,9 @@ import { getSpiritById } from "@/lib/spirits";
 import { getDarkSpirit } from "@/lib/darkSpirits";
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.GOOGLE_AI_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: "API 키 없음 (환경변수 미설정)" }, { status: 500 });
+    return NextResponse.json({ error: "API 키 없음" }, { status: 500 });
   }
 
   try {
@@ -23,21 +23,21 @@ export async function POST(req: NextRequest) {
 
     const prompt = isDark ? getDarkSpirit(spirit.id).systemPrompt : spirit.systemPrompt;
     const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
-    const dateLine = `오늘 날짜: ${today}.`;
-    const nickLine = nickname ? `사용자 닉네임: ${nickname}. 대화에서 자연스럽게 이름을 불러줘. 이름을 다시 묻지 마.` : "";
-    const systemContent = [dateLine, nickLine, prompt].filter(Boolean).join("\n\n");
+    const systemContent = [
+      "반드시 한국어로만 대답해. 영어 사용 절대 금지.",
+      `오늘 날짜: ${today}.`,
+      nickname ? `사용자 닉네임: ${nickname}. 대화에서 자연스럽게 이름을 불러줘. 이름을 다시 묻지 마.` : "",
+      prompt,
+    ].filter(Boolean).join("\n\n");
 
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-        "X-Title": "Five Spirits",
       },
       body: JSON.stringify({
-        model: "nvidia/nemotron-3-super-120b-a12b:free",
-        stream: false,
+        model: "gemini-2.5-flash",
         max_tokens: 1024,
         messages: [
           { role: "system", content: systemContent },
@@ -51,10 +51,7 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const errText = await res.text();
-      // 디버그: 오류 응답에 키 앞 8자리 + 길이 포함
-      return NextResponse.json({
-        error: `${errText} [키앞8자=${apiKey.slice(0, 8)} 길이=${apiKey.length}]`
-      }, { status: res.status });
+      return NextResponse.json({ error: errText }, { status: res.status });
     }
 
     const data = await res.json() as { choices?: { message?: { content?: string } }[] };

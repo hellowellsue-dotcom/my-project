@@ -6,12 +6,8 @@ import { getSpiritById } from "@/lib/spirits";
 import { getDarkSpirit } from "@/lib/darkSpirits";
 
 const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-    "X-Title": "Five Spirits",
-  },
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+  apiKey: process.env.GOOGLE_AI_KEY,
 });
 
 export async function POST(req: NextRequest) {
@@ -24,14 +20,15 @@ export async function POST(req: NextRequest) {
 
     const isDark = mode === "dark";
     const today = new Date().toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "long" });
-    const systemPrompt = isDark ? getDarkSpirit(spirit.id).systemPrompt : spirit.systemPrompt;
+    const systemPrompt = "반드시 한국어로만 대답해. 영어 사용 절대 금지.\n\n" +
+      (isDark ? getDarkSpirit(spirit.id).systemPrompt : spirit.systemPrompt);
 
     const userPrompt = isDark
       ? `오늘(${today}) ${spirit.ohangKor}(${spirit.ohang}) 기운이 부족한 사람에게 팩폭 한마디를 해줘.\n- 딱 2~3문장\n- 근거 있는 직언, 냉소적이지만 틀린 말은 없어야 해\n- 오늘 당장 할 수 있는 불편한 행동 1가지 포함\n- 평소 말투 그대로, 과도한 위로 절대 금지`
       : `오늘(${today}) ${spirit.ohangKor}(${spirit.ohang}) 기운이 부족한 사람에게 짧은 한마디를 해줘.\n- 딱 2~3문장\n- 오늘 바로 해볼 수 있는 아주 작은 행동 1가지 포함\n- 평소 말투 그대로`;
 
     const completion = await client.chat.completions.create({
-      model: "nvidia/nemotron-3-super-120b-a12b:free",
+      model: "gemini-2.5-flash",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },

@@ -4,12 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "http://localhost:3000",
-    "X-Title": "Five Spirits",
-  },
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+  apiKey: process.env.GOOGLE_AI_KEY,
 });
 
 export type EmotionType = "sad" | "anxious" | "angry" | "tired" | "happy" | "lonely" | "neutral";
@@ -22,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await client.chat.completions.create({
-      model: "nvidia/nemotron-3-super-120b-a12b:free",
+      model: "gemini-2.5-flash",
       stream: false,
       max_tokens: 10,
       messages: [
