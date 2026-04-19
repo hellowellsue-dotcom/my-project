@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         "X-Title": "Five Spirits",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash-exp:free",
+        model: "google/gemma-4-31b-it:free",
         stream: false,
         max_tokens: 1024,
         messages: [

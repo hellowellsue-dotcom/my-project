@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       : `오늘(${today}) ${spirit.ohangKor}(${spirit.ohang}) 기운이 부족한 사람에게 짧은 한마디를 해줘.\n- 딱 2~3문장\n- 오늘 바로 해볼 수 있는 아주 작은 행동 1가지 포함\n- 평소 말투 그대로`;
 
     const completion = await client.chat.completions.create({
-      model: "google/gemini-2.0-flash-exp:free",
+      model: "google/gemma-4-31b-it:free",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
