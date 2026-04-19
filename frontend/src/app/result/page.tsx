@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { spirits, getSpiritById, OhangType } from "@/lib/spirits";
 import { OhangScores } from "@/lib/ohang";
 import SpiritCard from "@/components/SpiritCard";
@@ -20,6 +20,15 @@ const OHANG_LABELS: { key: OhangType; korName: string; ohang: string; stroke: st
   { key: "water", korName: "물",   ohang: "水", stroke: "#3A6B8A" },
   { key: "metal", korName: "금",   ohang: "金", stroke: "#8A8A6A" },
 ];
+
+function renderBold(text: string): React.ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith("**") && part.endsWith("**")
+      ? <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>
+      : part
+  );
+}
 
 function getParticle(name: string): string {
   const code = name.charCodeAt(name.length - 1);
@@ -241,7 +250,7 @@ function ResultContent() {
         ) : fortune ? (
           <div className="bg-[#FDF0EA] dark:bg-[#1C1830] border border-[#F0D8CC] dark:border-[#2D2744] rounded-2xl px-4 py-3">
             <p className="text-[11px] text-[#E8896A] dark:text-[#A78BFA] font-semibold mb-1.5">{recommendedSpirit.ohang} {recommendedSpirit.name}</p>
-            <p className="text-sm text-[#3D2B1F]/75 dark:text-[#E8E4F0]/75 leading-relaxed">{fortune}</p>
+            <p className="text-sm text-[#3D2B1F]/75 dark:text-[#E8E4F0]/75 leading-relaxed">{renderBold(fortune)}</p>
           </div>
         ) : null}
       </div>
