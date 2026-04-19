@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash",
         max_tokens: 5,
         messages: [
           {
