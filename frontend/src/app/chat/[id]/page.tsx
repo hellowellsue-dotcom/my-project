@@ -335,15 +335,16 @@ export default function ChatPage() {
       bufferRef.current = json.content;
       isStreamingDoneRef.current = true;
       typingTimerRef.current = setTimeout(tickTyping, TYPING_SPEED_MS);
-    } catch {
+    } catch (err) {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       setDisplayedContent("");
       bufferRef.current = "";
       displayedRef.current = "";
       setIsLoading(false);
+      const errMsg = err instanceof Error ? err.message : String(err);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "잠시 후 다시 얘기해줘." },
+        { role: "assistant", content: `[오류] ${errMsg}` },
       ]);
     }
   }

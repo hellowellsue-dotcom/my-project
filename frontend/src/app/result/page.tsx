@@ -90,7 +90,7 @@ function ResultContent() {
 
   useEffect(() => {
     const cached = getCachedFortune(recommended, mode);
-    if (cached) { setFortune(cached); return; }
+    if (cached && !cached.startsWith("[오류]")) { setFortune(cached); return; }
     setFortuneLoading(true);
     fetch("/api/fortune", {
       method: "POST",
@@ -98,10 +98,11 @@ function ResultContent() {
       body: JSON.stringify({ spiritId: recommended, mode }),
     })
       .then((r) => r.json())
-      .then(({ fortune: text }: { fortune: string }) => {
-        if (text) { cacheFortune(recommended, mode, text); setFortune(text); }
+      .then((data: { fortune?: string; error?: string }) => {
+        if (data.fortune) { cacheFortune(recommended, mode, data.fortune); setFortune(data.fortune); }
+        else if (data.error) setFortune(`[오류] ${data.error}`);
       })
-      .catch(() => {})
+      .catch((err: unknown) => { setFortune(`[오류] ${err instanceof Error ? err.message : String(err)}`); })
       .finally(() => setFortuneLoading(false));
   }, [recommended, mode]);
 
