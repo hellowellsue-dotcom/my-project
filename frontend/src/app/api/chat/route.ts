@@ -3,6 +3,10 @@ import { getSpiritById } from "@/lib/spirits";
 import { getDarkSpirit } from "@/lib/darkSpirits";
 
 export async function POST(req: NextRequest) {
+  if (!process.env.OPENROUTER_API_KEY) {
+    return NextResponse.json({ error: "API 키 없음 (환경변수 미설정)" }, { status: 500 });
+  }
+
   try {
     const { spiritId, messages, nickname, mode } = await req.json();
     const isDark = mode !== "light";
