@@ -5,21 +5,21 @@ export type EmotionType = "sad" | "anxious" | "angry" | "tired" | "happy" | "lon
 export async function POST(req: NextRequest) {
   try {
     const { message } = await req.json();
-    if (!message || typeof message !== "string") {
-      return NextResponse.json({ emotion: "neutral" });
-    }
+    if (!message || typeof message !== "string") return NextResponse.json({ emotion: "neutral" });
 
-    const apiKey = process.env.GOOGLE_AI_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) return NextResponse.json({ emotion: "neutral" });
 
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://charcter-chat.vercel.app",
+        "X-Title": "Five Spirits",
       },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: "google/gemini-2.5-flash",
         max_tokens: 10,
         messages: [
           {
@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
     const raw = data.choices?.[0]?.message?.content?.trim().toLowerCase() ?? "neutral";
     const valid: EmotionType[] = ["sad", "anxious", "angry", "tired", "happy", "lonely", "neutral"];
     const emotion: EmotionType = valid.find((e) => raw.includes(e)) ?? "neutral";
-
     return NextResponse.json({ emotion });
   } catch {
     return NextResponse.json({ emotion: "neutral" });

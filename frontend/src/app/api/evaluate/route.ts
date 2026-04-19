@@ -3,21 +3,21 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const { message } = await req.json();
-    if (!message || typeof message !== "string") {
-      return NextResponse.json({ sincere: false });
-    }
+    if (!message || typeof message !== "string") return NextResponse.json({ sincere: false });
 
-    const apiKey = process.env.GOOGLE_AI_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) return NextResponse.json({ sincere: false });
 
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://charcter-chat.vercel.app",
+        "X-Title": "Five Spirits",
       },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: "google/gemini-2.5-flash",
         max_tokens: 5,
         messages: [
           {

@@ -3,7 +3,7 @@ import { getSpiritById } from "@/lib/spirits";
 import { getDarkSpirit } from "@/lib/darkSpirits";
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GOOGLE_AI_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "API 키 없음" }, { status: 500 });
   }
@@ -30,14 +30,16 @@ export async function POST(req: NextRequest) {
       prompt,
     ].filter(Boolean).join("\n\n");
 
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://charcter-chat.vercel.app",
+        "X-Title": "Five Spirits",
       },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: "google/gemini-2.5-flash",
         max_tokens: 1024,
         messages: [
           { role: "system", content: systemContent },
