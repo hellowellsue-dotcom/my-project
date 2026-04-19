@@ -1,3 +1,45 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html, body {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+/* ── 다크모드 기본 오버라이드 ── */
+.dark input,
+.dark textarea,
+.dark select {
+  color-scheme: dark;
+}
+
+/* 숨쉬기 (평시) */
+@keyframes breathe {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-7px) scale(1.02); }
+}
+
+/* 말하기 (응답 중) — 부드러운 인앤아웃 */
+@keyframes talking {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-10px) scale(1.04); }
+}
+
+.spirit-breathe {
+  animation: breathe 3.5s ease-in-out infinite;
+}
+
+.spirit-talking {
+  animation: talking 1.2s ease-in-out infinite;
+}
+
+@keyframes gemToast {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  15%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  80%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+.gem-toast {
+  animation: gemToast 2.8s ease-in-out forwards;
+}
