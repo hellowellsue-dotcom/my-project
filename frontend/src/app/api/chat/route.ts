@@ -1,14 +1,11 @@
-export const runtime = "edge";
-
 import { NextRequest, NextResponse } from "next/server";
 import { getSpiritById } from "@/lib/spirits";
 import { getDarkSpirit } from "@/lib/darkSpirits";
-import { AppMode } from "@/lib/mode";
 
 export async function POST(req: NextRequest) {
   try {
     const { spiritId, messages, nickname, mode } = await req.json();
-    const isDark = (mode as AppMode) !== "light";
+    const isDark = mode !== "light";
 
     if (!spiritId || !messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: "잘못된 요청입니다." }, { status: 400 });
@@ -25,7 +22,7 @@ export async function POST(req: NextRequest) {
     const nickLine = nickname ? `사용자 닉네임: ${nickname}. 대화에서 자연스럽게 이름을 불러줘. 이름을 다시 묻지 마.` : "";
     const systemContent = [dateLine, nickLine, prompt].filter(Boolean).join("\n\n");
 
-    const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -35,7 +32,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        stream: true,
+        stream: false,
         max_tokens: 1024,
         messages: [
           { role: "system", content: systemContent },
@@ -47,20 +44,16 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    if (!upstream.ok) {
-      const err = await upstream.text();
-      return NextResponse.json({ error: err }, { status: upstream.status });
+    if (!res.ok) {
+      const errText = await res.text();
+      return NextResponse.json({ error: errText }, { status: res.status });
     }
 
-    return new Response(upstream.body, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
+    const data = await res.json() as { choices?: { message?: { content?: string } }[] };
+    const content = data.choices?.[0]?.message?.content?.trim() ?? "";
+    return NextResponse.json({ content });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "서버 오류가 발생했습니다.";
+    const message = error instanceof Error ? error.message : "서버 오류";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

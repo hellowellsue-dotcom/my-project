@@ -329,37 +329,12 @@ export default function ChatPage() {
         body: JSON.stringify({ spiritId: spirit.id, messages: updatedMessages, nickname: getNickname(), mode: getMode() }),
       });
 
-      if (!response.ok) throw new Error("응답 오류");
+      const json = await response.json() as { content?: string; error?: string };
+      if (!response.ok || !json.content) throw new Error(json.error ?? "응답 오류");
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let isFirstChunk = true;
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const lines = decoder.decode(value).split("\n");
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            const data = line.slice(6).trim();
-            if (data === "[DONE]") continue;
-            try {
-              const parsed = JSON.parse(data);
-              const delta = parsed.choices?.[0]?.delta?.content ?? "";
-              if (!delta) continue;
-              bufferRef.current += delta;
-              if (isFirstChunk) {
-                isFirstChunk = false;
-                typingTimerRef.current = setTimeout(tickTyping, TYPING_SPEED_MS);
-              }
-            } catch { /* ignore */ }
-          }
-        }
-      }
-
+      bufferRef.current = json.content;
       isStreamingDoneRef.current = true;
+      typingTimerRef.current = setTimeout(tickTyping, TYPING_SPEED_MS);
     } catch {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       setDisplayedContent("");
