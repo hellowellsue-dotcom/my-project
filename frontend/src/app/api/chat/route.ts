@@ -1,19 +1,9 @@
 export const runtime = "edge";
 
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 import { getSpiritById } from "@/lib/spirits";
 import { getDarkSpirit } from "@/lib/darkSpirits";
 import { AppMode } from "@/lib/mode";
-
-const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-    "X-Title": "Five Spirits",
-  },
-});
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,29 +19,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "정령을 찾을 수 없습니다." }, { status: 404 });
     }
 
-    const stream = await client.chat.completions.create({
-      model: "google/gemini-2.5-flash",
-      stream: true,
-      max_tokens: 1024,
-      messages: [
-        {
-          role: "system",
-          content: (() => {
-            const prompt = isDark ? getDarkSpirit(spirit.id).systemPrompt : spirit.systemPrompt;
-            const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
-            const dateLine = `오늘 날짜: ${today}.`;
-            const nickLine = nickname ? `사용자 닉네임: ${nickname}. 대화에서 자연스럽게 이름을 불러줘. 이름을 다시 묻지 마.` : "";
-            return [dateLine, nickLine, prompt].filter(Boolean).join("\n\n");
-          })(),
-        },
-        ...messages.map((m: { role: string; content: string }) => ({
-          role: m.role as "user" | "assistant",
-          content: m.content,
-        })),
-      ],
+    const prompt = isDark ? getDarkSpirit(spirit.id).systemPrompt : spirit.systemPrompt;
+    const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+    const dateLine = `오늘 날짜: ${today}.`;
+    const nickLine = nickname ? `사용자 닉네임: ${nickname}. 대화에서 자연스럽게 이름을 불러줘. 이름을 다시 묻지 마.` : "";
+    const systemContent = [dateLine, nickLine, prompt].filter(Boolean).join("\n\n");
+
+    const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+        "X-Title": "Five Spirits",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        stream: true,
+        max_tokens: 1024,
+        messages: [
+          { role: "system", content: systemContent },
+          ...messages.map((m: { role: string; content: string }) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          })),
+        ],
+      }),
     });
 
-    return new Response(stream.toReadableStream(), {
+    if (!upstream.ok) {
+      const err = await upstream.text();
+      return NextResponse.json({ error: err }, { status: upstream.status });
+    }
+
+    return new Response(upstream.body, {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
@@ -59,7 +60,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Chat API error:", error);
     const message = error instanceof Error ? error.message : "서버 오류가 발생했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
