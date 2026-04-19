@@ -1,5 +1,5 @@
 function todayKey(spiritId: string, mode: string) {
-  return `fortune_v2_${spiritId}_${mode}_${new Date().toISOString().slice(0, 10)}`;
+  return `fortune_v3_${spiritId}_${mode}_${new Date().toISOString().slice(0, 10)}`;
 }
 
 export function getCachedFortune(spiritId: string, mode: string): string | null {
