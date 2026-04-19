@@ -3,7 +3,8 @@ import { getSpiritById } from "@/lib/spirits";
 import { getDarkSpirit } from "@/lib/darkSpirits";
 
 export async function POST(req: NextRequest) {
-  if (!process.env.OPENROUTER_API_KEY) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
     return NextResponse.json({ error: "API 키 없음 (환경변수 미설정)" }, { status: 500 });
   }
 
@@ -20,6 +21,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "정령을 찾을 수 없습니다." }, { status: 404 });
     }
 
+    // 임시 디버그: 키 앞 8자리 + 길이
+    return NextResponse.json({ error: `키확인: 앞8자=${apiKey.slice(0, 8)} 길이=${apiKey.length}` }, { status: 500 });
+
     const prompt = isDark ? getDarkSpirit(spirit.id).systemPrompt : spirit.systemPrompt;
     const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
     const dateLine = `오늘 날짜: ${today}.`;
@@ -29,7 +33,7 @@ export async function POST(req: NextRequest) {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
         "X-Title": "Five Spirits",
@@ -56,8 +60,8 @@ export async function POST(req: NextRequest) {
     const data = await res.json() as { choices?: { message?: { content?: string } }[] };
     const content = data.choices?.[0]?.message?.content?.trim() ?? "";
     return NextResponse.json({ content });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "서버 오류";
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "서버 오류";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
