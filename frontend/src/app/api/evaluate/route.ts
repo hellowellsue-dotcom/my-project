@@ -1,12 +1,4 @@
-export const runtime = "edge";
-
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const client = new OpenAI({
-  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-  apiKey: process.env.GOOGLE_AI_KEY,
-});
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,21 +7,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ sincere: false });
     }
 
-    const result = await client.chat.completions.create({
-      model: "gemini-2.5-flash",
-      stream: false,
-      max_tokens: 5,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You evaluate if a Korean message is sincere/heartfelt — sharing genuine personal feelings, struggles, fears, gratitude, or meaningful reflection. Reply with only 'yes' or 'no'.",
-        },
-        { role: "user", content: message },
-      ],
+    const apiKey = process.env.GOOGLE_AI_KEY;
+    if (!apiKey) return NextResponse.json({ sincere: false });
+
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gemini-2.5-flash",
+        max_tokens: 5,
+        messages: [
+          {
+            role: "system",
+            content: "You evaluate if a Korean message is sincere/heartfelt — sharing genuine personal feelings, struggles, fears, gratitude, or meaningful reflection. Reply with only 'yes' or 'no'.",
+          },
+          { role: "user", content: message },
+        ],
+      }),
     });
 
-    const answer = result.choices[0]?.message?.content?.trim().toLowerCase() ?? "";
+    if (!res.ok) return NextResponse.json({ sincere: false });
+
+    const data = await res.json() as { choices?: { message?: { content?: string } }[] };
+    const answer = data.choices?.[0]?.message?.content?.trim().toLowerCase() ?? "";
     return NextResponse.json({ sincere: answer.startsWith("yes") });
   } catch {
     return NextResponse.json({ sincere: false });
