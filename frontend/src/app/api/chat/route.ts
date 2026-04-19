@@ -10,7 +10,7 @@ const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY,
   defaultHeaders: {
-    "HTTP-Referer": "http://localhost:3000",
+    "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
     "X-Title": "Five Spirits",
   },
 });
@@ -51,22 +51,7 @@ export async function POST(req: NextRequest) {
       ],
     });
 
-    const encoder = new TextEncoder();
-    const readableStream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of stream) {
-            const data = `data: ${JSON.stringify(chunk)}\n\n`;
-            controller.enqueue(encoder.encode(data));
-          }
-          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(readableStream, {
+    return new Response(stream.toReadableStream(), {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",

@@ -13,6 +13,7 @@ import { awardGem, GEM_CONFIG } from "@/lib/gems";
 import { getAffinity, incrementAffinity, getLevelInfo, didLevelUp } from "@/lib/affinity";
 import { getMode } from "@/lib/mode";
 import { getDarkSpirit } from "@/lib/darkSpirits";
+import { getRandomGreeting } from "@/lib/greetings";
 
 const TYPING_SPEED_MS = 50;
 
@@ -44,7 +45,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (spirit) {
       const mode = getMode();
-      const greeting = mode === "dark" ? getDarkSpirit(spirit.id).greeting : spirit.greeting;
+      const greeting = getRandomGreeting(spirit.id, mode === "dark" ? "dark" : "light");
       setMessages([{ role: "assistant", content: greeting }]);
     }
   }, [spirit?.id]);
