@@ -21,9 +21,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "정령을 찾을 수 없습니다." }, { status: 404 });
     }
 
-    // 임시 디버그: 키 앞 8자리 + 길이
-    return NextResponse.json({ error: `키확인: 앞8자=${apiKey.slice(0, 8)} 길이=${apiKey.length}` }, { status: 500 });
-
     const prompt = isDark ? getDarkSpirit(spirit.id).systemPrompt : spirit.systemPrompt;
     const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
     const dateLine = `오늘 날짜: ${today}.`;
@@ -54,7 +51,10 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const errText = await res.text();
-      return NextResponse.json({ error: errText }, { status: res.status });
+      // 디버그: 오류 응답에 키 앞 8자리 + 길이 포함
+      return NextResponse.json({
+        error: `${errText} [키앞8자=${apiKey.slice(0, 8)} 길이=${apiKey.length}]`
+      }, { status: res.status });
     }
 
     const data = await res.json() as { choices?: { message?: { content?: string } }[] };
